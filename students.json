@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1779188924738,
+    "fullName": "toba",
+    "fatherName": "hasan",
+    "dob": "2026-05-28",
+    "bForm": "4398498549385943",
+    "admissionClass": "عالمہ کورس",
+    "guardianPhone": "03028357161",
+    "address": "Kahror Pakka",
+    "admissionDate": "19/5/2026"
+  },
+  {
+    "id": 1779191772495,
+    "fullName": "hamza",
+    "fatherName": "usama",
+    "dob": "2026-05-22",
+    "bForm": "8896868686785785",
+    "admissionClass": "درجہ ہفتم",
+    "guardianPhone": "03028357161",
+    "address": "Kahror Pakkaj",
+    "admissionDate": "19/5/2026"
+  }
+]

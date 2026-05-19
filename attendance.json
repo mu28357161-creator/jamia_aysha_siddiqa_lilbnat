@@ -1,0 +1,22 @@
+[
+  {
+    "date": "2026-05-19",
+    "records": [
+      {
+        "studentId": 1779188924738,
+        "studentName": "toba",
+        "fatherName": "hasan",
+        "admissionClass": "عالمہ کورس",
+        "status": "leave"
+      },
+      {
+        "studentId": 1779191772495,
+        "studentName": "hamza",
+        "fatherName": "usama",
+        "admissionClass": "درجہ ہفتم",
+        "status": "leave"
+      }
+    ],
+    "savedAt": "19/5/2026"
+  }
+]
