@@ -4,14 +4,19 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 5000;
+
+// ہوسٹنگر کی پورٹ سیٹنگ کے لیے (تاکہ سرور کریش نہ ہو)
+const PORT = process.env.PORT || 5000;
+
 const DATA_FILE       = path.join(__dirname, 'students.json');
 const FEES_FILE       = path.join(__dirname, 'fees.json');
 const ATTENDANCE_FILE = path.join(__dirname, 'attendance.json');
 const RESULTS_FILE    = path.join(__dirname, 'results.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// چونکہ پبلک کا فولڈر نہیں ہے، اس لیے یہ لائن باہر کھلی فائلوں کو سرور پر ایکٹیو کرے گی
+app.use(express.static(__dirname));
 
 function readStudents() {
   try {
@@ -62,6 +67,16 @@ function readResults() {
 function writeResults(data) {
   fs.writeFileSync(RESULTS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
+
+// ── اصلی ہوم پیج کا روٹ (Cannot GET / کا سو فیصد حل) ──
+app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send("سرور بالکل صحیح چل رہا ہے! لیکن باہر مین فولڈر (public_html) میں 'index.html' فائل موجود نہیں ہے۔ اسے چیک کریں۔");
+  }
+});
 
 // Submit new student admission
 app.post('/api/students', (req, res) => {
@@ -138,15 +153,15 @@ app.post('/api/fees', (req, res) => {
   const receiptNo = 'RCP-' + String(fees.length + 1).padStart(4, '0');
 
   const newFee = {
-    id:             Date.now(),
-    studentId:      student.id,
-    studentName:    student.fullName,
-    fatherName:     student.fatherName,
-    admissionClass: student.admissionClass,
-    amount:         parseFloat(amount),
+    id:              Date.now(),
+    studentId:       student.id,
+    studentName:     student.fullName,
+    fatherName:      student.fatherName,
+    admissionClass:  student.admissionClass,
+    amount:          parseFloat(amount),
     month,
-    year:           String(year),
-    paymentDate:    new Date().toLocaleDateString('ur-PK'),
+    year:            String(year),
+    paymentDate:     new Date().toLocaleDateString('ur-PK'),
     receiptNo
   };
 
@@ -169,7 +184,6 @@ app.delete('/api/fees/:id', (req, res) => {
 
 // ── Attendance Routes ──
 
-// GET ?date=YYYY-MM-DD → single day record; no query → list of all saved dates
 app.get('/api/attendance', (req, res) => {
   const all = readAttendance();
   const { date } = req.query;
@@ -180,7 +194,6 @@ app.get('/api/attendance', (req, res) => {
   res.json({ success: true, dates: all.map(a => a.date) });
 });
 
-// POST { date, records:[{studentId,studentName,fatherName,admissionClass,status}] }
 app.post('/api/attendance', (req, res) => {
   const { date, records } = req.body;
   if (!date || !Array.isArray(records)) {
@@ -194,7 +207,6 @@ app.post('/api/attendance', (req, res) => {
   if (idx >= 0) all[idx] = entry;
   else          all.push(entry);
 
-  // Keep sorted newest-first
   all.sort((a, b) => (a.date < b.date ? 1 : -1));
   writeAttendance(all);
   res.json({ success: true, message: 'حاضری کامیابی سے محفوظ ہو گئی' });
@@ -241,19 +253,19 @@ app.post('/api/results', (req, res) => {
 
   const results   = readResults();
   const newResult = {
-    id:             Date.now(),
-    studentId:      student.id,
-    studentName:    student.fullName,
-    fatherName:     student.fatherName,
-    admissionClass: student.admissionClass,
-    examTitle:      examTitle || 'سالانہ امتحان',
+    id:              Date.now(),
+    studentId:       student.id,
+    studentName:     student.fullName,
+    fatherName:      student.fatherName,
+    admissionClass:  student.admissionClass,
+    examTitle:       examTitle || 'سالانہ امتحان',
     marks,
     totalObtained,
     totalMarks,
-    percentage:     Math.round(percentage * 100) / 100,
+    percentage:      Math.round(percentage * 100) / 100,
     grade,
     gradeLabel,
-    examDate:       new Date().toLocaleDateString('ur-PK')
+    examDate:        new Date().toLocaleDateString('ur-PK')
   };
 
   results.push(newResult);
@@ -273,29 +285,15 @@ app.delete('/api/results/:id', (req, res) => {
   res.json({ success: true, message: 'ریکارڈ حذف کر دیا گیا' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT} — visit http://localhost:${PORT}`);
-});
-// --- ڈیٹا بیک اپ سسٹم کا کوڈ شروع ---
-
+// ── ڈیٹا بیک اپ سسٹم ──
 app.get('/api/backup', (req, res) => {
     try {
         const zip = new AdmZip();
-        
-        // ان تمام فائلوں کی لسٹ جن کا بیک اپ لینا ہے
-        const filesToBackup = [
-            'students.json', 
-            'fees.json', 
-            'attendance.json', 
-            'results.json'
-        ];
-
+        const filesToBackup = ['students.json', 'fees.json', 'attendance.json', 'results.json'];
         let filesAdded = 0;
 
         filesToBackup.forEach(file => {
             const filePath = path.join(__dirname, file);
-            
-            // چیک کریں کہ فائل موجود ہے یا نہیں
             if (fs.existsSync(filePath)) {
                 zip.addLocalFile(filePath);
                 filesAdded++;
@@ -306,20 +304,19 @@ app.get('/api/backup', (req, res) => {
             return res.status(404).send("بیک اپ کے لیے کوئی ڈیٹا فائل نہیں ملی۔");
         }
 
-        // زپ فائل کا نام موجودہ تاریخ کے ساتھ
         const date = new Date().toISOString().slice(0, 10);
         const downloadName = `Madrasa_Aysha_Backup_${date}.zip`;
-        
         const zipBuffer = zip.toBuffer();
 
-        // فائل ڈاؤن لوڈ کروانے کی سیٹنگز
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', `attachment; filename=${downloadName}`);
         res.send(zipBuffer);
-
     } catch (error) {
         console.error("Backup Error:", error);
         res.status(500).send("بیک اپ بنانے میں سرور پر کوئی مسئلہ آیا ہے۔");
     }
 });
-// --- ڈیٹا بیک اپ سسٹم کا کوڈ ختم -
+
+app.listen(PORT, () => {
+  console.log(`Server running at port ${PORT}`);
+});
