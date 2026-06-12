@@ -552,17 +552,50 @@ function renderAttRows() {
     c.innerHTML = '<div class="empty"><i class="fa fa-users"></i>طالبات موجود نہیں</div>';
     return;
   }
-  c.innerHTML = students.map(function(s){
+  c.innerHTML = '';
+
+  students.forEach(function(s) {
     var st = attStatus[s.id] || 'حاضر';
-    return '<div class="att-row" id="att-' + s.id + '">' +
-      '<div><div class="att-info-name">' + s.fullName + '</div>' +
-      '<div class="att-info-sub">' + s.fatherName + ' | ' + s.admissionClass + '</div></div>' +
-      '<div class="st-btns">' +
-      '<button type="button" class="st-btn pr' + (st==='حاضر'?' sel':'') + '" onclick="setSt(' + s.id + ',\'حاضر\',this)">حاضر</button>' +
-      '<button type="button" class="st-btn ab' + (st==='غیر حاضر'?' sel':'') + '" onclick="setSt(' + s.id + ',\'غیر حاضر\',this)">غیر حاضر</button>' +
-      '<button type="button" class="st-btn lv' + (st==='رخصت'?' sel':'') + '" onclick="setSt(' + s.id + ',\'رخصت\',this)">رخصت</button>' +
-      '</div></div>';
-  }).join('');
+
+    var row = document.createElement('div');
+    row.className = 'att-row';
+    row.id = 'att-' + s.id;
+
+    var info = document.createElement('div');
+    var nameEl = document.createElement('div');
+    nameEl.className = 'att-info-name';
+    nameEl.textContent = s.fullName;
+
+    var subEl = document.createElement('div');
+    subEl.className = 'att-info-sub';
+    subEl.textContent = s.fatherName + ' | ' + s.admissionClass;
+
+    info.appendChild(nameEl);
+    info.appendChild(subEl);
+
+    var btnWrap = document.createElement('div');
+    btnWrap.className = 'st-btns';
+
+    function createStatusButton(status, label, typeClass) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'st-btn ' + typeClass + (st === status ? ' sel' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', function() {
+        setSt(s.id, status, btn);
+      });
+      return btn;
+    }
+
+    btnWrap.appendChild(createStatusButton('حاضر', 'حاضر', 'pr'));
+    btnWrap.appendChild(createStatusButton('غیر حاضر', 'غیر حاضر', 'ab'));
+    btnWrap.appendChild(createStatusButton('رخصت', 'رخصت', 'lv'));
+
+    row.appendChild(info);
+    row.appendChild(btnWrap);
+    c.appendChild(row);
+  });
+
   document.getElementById('att-save-wrap').style.display = 'block';
 }
 
