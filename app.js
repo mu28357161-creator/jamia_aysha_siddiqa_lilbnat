@@ -11,7 +11,7 @@ const ATTENDANCE_FILE = path.join(__dirname, 'attendance.json');
 const RESULTS_FILE    = path.join(__dirname, 'results.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 function readStudents() {
   try {
