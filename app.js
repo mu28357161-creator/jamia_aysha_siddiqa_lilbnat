@@ -12,7 +12,15 @@ const RESULTS_FILE    = path.join(__dirname, 'results.json');
 
 app.use(express.json());
 app.use(express.static(__dirname));
-
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family:sans-serif; text-align:center; padding:50px; direction:rtl;">
+            <h1 style="color:#5c3c92;">جامعہ عائشہ صدیقہ للبنات</h1>
+            <h2>مینجمنٹ سسٹم کامیابی سے لائیو ہو چکا ہے!</h2>
+            <p>سرور بالکل صحیح کام کر رہا ہے۔ اب آپ کے فنکشنز ایکٹیو ہیں۔</p>
+        </div>
+    `);
+});
 function readStudents() {
   try {
     const data = fs.readFileSync(DATA_FILE, 'utf8');
